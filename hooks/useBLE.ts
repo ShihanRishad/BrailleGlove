@@ -108,7 +108,7 @@ export function useBLE() {
       const connectedDevice = await selectedDevice.connect();
       await connectedDevice.discoverAllServicesAndCharacteristics();
       setDevice(connectedDevice);
-      setConnectionStatus('Connected! 🧤');
+      setConnectionStatus('Connected!');
 
       // Monitor for real disconnection events
       disconnectSubscription.current?.remove();

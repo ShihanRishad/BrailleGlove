@@ -40,18 +40,18 @@ export default function CommunicationPanel({
           </TouchableOpacity>
         </View>
 
-        <View style={styles.modeToggleContainer}>
+        <View style={[styles.modeToggleContainer, isDark && darkStyles.modeToggleContainer]}>
           <TouchableOpacity
             style={[styles.modeToggleButton, mode === 'text' && styles.modeToggleButtonActive, isDark && mode === 'text' && darkStyles.modeToggleButtonActive]}
             onPress={() => setMode('text')}
           >
-            <Text style={[styles.modeToggleText, mode === 'text' && styles.modeToggleTextActive, isDark && darkStyles.modeToggleText]}>Text Mode</Text>
+            <Text style={[styles.modeToggleText, isDark && darkStyles.modeToggleText, mode === 'text' && styles.modeToggleTextActive, isDark && mode === 'text' && darkStyles.modeToggleTextActive]}>Text Mode</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.modeToggleButton, mode === 'grid' && styles.modeToggleButtonActive, isDark && mode === 'grid' && darkStyles.modeToggleButtonActive]}
             onPress={() => setMode('grid')}
           >
-            <Text style={[styles.modeToggleText, mode === 'grid' && styles.modeToggleTextActive, isDark && darkStyles.modeToggleText]}>Grid Mode</Text>
+            <Text style={[styles.modeToggleText, isDark && darkStyles.modeToggleText, mode === 'grid' && styles.modeToggleTextActive, isDark && mode === 'grid' && darkStyles.modeToggleTextActive]}>Grid Mode</Text>
           </TouchableOpacity>
         </View>
 
@@ -107,7 +107,7 @@ export default function CommunicationPanel({
                 </TouchableOpacity>
               ))}
             </View>
-            <Text style={[styles.hint, isDark && darkStyles.hint, { marginTop: 'auto' }]}>
+            <Text style={[styles.hint, isDark && darkStyles.hint, { marginTop: -35 }]}>
               Tap a letter to instantly send Braille pattern.
             </Text>
           </View>

@@ -169,7 +169,7 @@ export const styles = StyleSheet.create({
   modeToggleContainer: {
     flexDirection: 'row',
     backgroundColor: '#F1F3F5',
-    borderRadius: 12,
+    borderRadius: 120,
     padding: 4,
     marginBottom: 20,
   },
@@ -177,7 +177,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
     alignItems: 'center',
-    borderRadius: 8,
+    borderRadius: 100,
   },
   modeToggleButtonActive: {
     backgroundColor: '#FFFFFF',
