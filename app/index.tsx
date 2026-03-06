@@ -45,6 +45,7 @@ export default function HomeScreen() {
     connectToDevice,
     disconnectDevice,
     sendTextToGlove,
+    sendDirectText,
   } = useBLE();
 
   return (
@@ -140,6 +141,7 @@ export default function HomeScreen() {
           isSending={isSending}
           isDark={isDark}
           sendTextToGlove={sendTextToGlove}
+          sendDirectText={sendDirectText}
           disconnectDevice={disconnectDevice}
         />
       )}

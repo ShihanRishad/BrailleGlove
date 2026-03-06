@@ -166,6 +166,57 @@ export const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
   },
+  modeToggleContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#F1F3F5',
+    borderRadius: 12,
+    padding: 4,
+    marginBottom: 20,
+  },
+  modeToggleButton: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: 8,
+  },
+  modeToggleButtonActive: {
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  modeToggleText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6C757D',
+  },
+  modeToggleTextActive: {
+    color: '#212529',
+  },
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  gridItem: {
+    width: '18%', 
+    aspectRatio: 1,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E9ECEF',
+    marginBottom: 4,
+  },
+  gridItemText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#212529',
+  },
 });
 
 export const darkStyles = StyleSheet.create({
@@ -212,5 +263,24 @@ export const darkStyles = StyleSheet.create({
   },
   hint: {
     color: '#8E8E93',
+  },
+  modeToggleContainer: {
+    backgroundColor: '#2C2C2E',
+  },
+  modeToggleButtonActive: {
+    backgroundColor: '#3A3A3C',
+  },
+  modeToggleText: {
+    color: '#8E8E93',
+  },
+  modeToggleTextActive: {
+    color: '#FFFFFF',
+  },
+  gridItem: {
+    backgroundColor: '#2C2C2E',
+    borderColor: '#3A3A3C',
+  },
+  gridItemText: {
+    color: '#FFFFFF',
   },
 });

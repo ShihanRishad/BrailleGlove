@@ -142,10 +142,10 @@ export function useBLE() {
     }
   };
 
-  const sendTextToGlove = async () => {
+  const _sendToGlove = async (text: string) => {
     if (!device) return;
 
-    const textToVibrate = inputText.toLowerCase().replace(/[^a-z]/g, '');
+    const textToVibrate = text.toLowerCase().replace(/[^a-z]/g, '');
     if (textToVibrate.length === 0) return;
 
     setIsSending(true);
@@ -190,8 +190,16 @@ export function useBLE() {
     }
 
     setIsSending(false);
-    setInputText('');
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  };
+
+  const sendTextToGlove = async () => {
+    await _sendToGlove(inputText);
+    setInputText('');
+  };
+
+  const sendDirectText = async (text: string) => {
+    await _sendToGlove(text);
   };
 
   return {
@@ -206,5 +214,6 @@ export function useBLE() {
     connectToDevice,
     disconnectDevice,
     sendTextToGlove,
+    sendDirectText,
   };
 }
