@@ -243,16 +243,20 @@ export default function HomeScreen() {
         <View style={styles.content}>
           <View style={styles.scanSection}>
             <TouchableOpacity 
-              style={[styles.scanButton, isScanning && styles.scanButtonDisabled]} 
+              style={[
+                styles.scanButton, 
+                isScanning && styles.scanButtonDisabled,
+                isDark && darkStyles.scanButton
+              ]} 
               onPress={startScan}
               disabled={isScanning}
             >
               {isScanning ? (
-                <ActivityIndicator color="white" />
+                <ActivityIndicator color={isDark ? "#121212" : "white"} />
               ) : (
                 <>
-                  <Ionicons name="search" size={20} color="white" style={{ marginRight: 8 }} />
-                  <Text style={styles.buttonText}>Scan for Glove</Text>
+                  <Ionicons name="search" size={20} color={isDark ? "#121212" : "white"} style={{ marginRight: 8 }} />
+                  <Text style={[styles.buttonText, isDark && darkStyles.scanButtonText]}>Scan for Glove</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -493,7 +497,10 @@ const darkStyles = StyleSheet.create({
     color: '#FFFFFF',
   },
   scanButton: { 
-    backgroundColor: '#c5c8ecff', 
+    backgroundColor: '#FFFFFF', 
+  },
+  scanButtonText: {
+    color: '#121212',
   },
   deviceCard: {
     backgroundColor: '#1C1C1E',
