@@ -45,13 +45,13 @@ export default function CommunicationPanel({
             style={[styles.modeToggleButton, mode === 'text' && styles.modeToggleButtonActive, isDark && mode === 'text' && darkStyles.modeToggleButtonActive]}
             onPress={() => setMode('text')}
           >
-            <Text style={[styles.modeToggleText, isDark && darkStyles.modeToggleText, mode === 'text' && styles.modeToggleTextActive, isDark && mode === 'text' && darkStyles.modeToggleTextActive]}>Text Mode</Text>
+            <Text style={[styles.modeToggleText, isDark && darkStyles.modeToggleText, mode === 'text' && styles.modeToggleTextActive, isDark && mode === 'text' && darkStyles.modeToggleTextActive]}>Text</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.modeToggleButton, mode === 'grid' && styles.modeToggleButtonActive, isDark && mode === 'grid' && darkStyles.modeToggleButtonActive]}
             onPress={() => setMode('grid')}
           >
-            <Text style={[styles.modeToggleText, isDark && darkStyles.modeToggleText, mode === 'grid' && styles.modeToggleTextActive, isDark && mode === 'grid' && darkStyles.modeToggleTextActive]}>Grid Mode</Text>
+            <Text style={[styles.modeToggleText, isDark && darkStyles.modeToggleText, mode === 'grid' && styles.modeToggleTextActive, isDark && mode === 'grid' && darkStyles.modeToggleTextActive]}>Grid</Text>
           </TouchableOpacity>
         </View>
 
