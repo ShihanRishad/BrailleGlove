@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -30,6 +31,7 @@ export default function HomeScreen() {
 
   const isDark = theme === 'dark';
   const toggleTheme = () => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  const router = useRouter();
 
   const {
     scannedDevices,
@@ -60,13 +62,22 @@ export default function HomeScreen() {
           >
             BrailleGlove
           </Animated.Text>
-          <TouchableOpacity onPress={toggleTheme}>
-            <Ionicons
-              name={isDark ? 'sunny' : 'moon'}
-              size={26}
-              color={isDark ? '#FFD700' : '#1A1A1A'}
-            />
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <TouchableOpacity onPress={() => router.push('/indicators')} style={{ marginRight: 16 }}>
+              <Ionicons
+                name="grid"
+                size={22}
+                color={isDark ? '#FFFFFF' : '#1A1A1A'}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={toggleTheme}>
+              <Ionicons
+                name={isDark ? 'sunny' : 'moon'}
+                size={26}
+                color={isDark ? '#FFD700' : '#1A1A1A'}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
         <Animated.View
           entering={FadeIn.delay(300)}
