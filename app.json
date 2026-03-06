@@ -20,10 +20,6 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.brailleglove.app"
     },
-    "androidNavigationBar": {
-      "visible": "sticky-immersive",
-      "backgroundColor": "#121212"
-    },
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
