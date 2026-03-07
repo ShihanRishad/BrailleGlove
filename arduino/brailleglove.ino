@@ -83,7 +83,6 @@ void loop() {
         
         delay(100); // Gap between pulses (off)
       }
-      // -----------------------
     }
   }
 }
