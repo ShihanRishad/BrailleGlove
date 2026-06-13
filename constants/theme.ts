@@ -195,25 +195,31 @@ export const styles = StyleSheet.create({
   modeToggleTextActive: {
     color: '#212529',
   },
-  gridContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 8,
+  gridTable: {
+    alignSelf: 'center',
+    width: '88%',
+    borderTopWidth: 1,
+    borderLeftWidth: 1,
+    borderColor: '#E9ECEF',
   },
-  gridItem: {
-    width: '18%', 
-    aspectRatio: 1,
+  gridRow: {
+    flexDirection: 'row',
+  },
+  gridCell: {
+    flex: 1,
+    aspectRatio: 1.1,
     backgroundColor: '#F8F9FA',
-    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
+    borderRightWidth: 1,
+    borderBottomWidth: 1,
     borderColor: '#E9ECEF',
-    marginBottom: 4,
   },
   gridItemText: {
-    fontSize: 20,
+    minWidth: 22,
+    textAlign: 'center',
+    fontSize: 21,
+    lineHeight: 26,
     fontWeight: '700',
     color: '#212529',
   },
@@ -276,7 +282,10 @@ export const darkStyles = StyleSheet.create({
   modeToggleTextActive: {
     color: '#FFFFFF',
   },
-  gridItem: {
+  gridTable: {
+    borderColor: '#3A3A3C',
+  },
+  gridCell: {
     backgroundColor: '#2C2C2E',
     borderColor: '#3A3A3C',
   },

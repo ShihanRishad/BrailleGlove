@@ -6,6 +6,7 @@ import { BleManager, Device, Subscription } from 'react-native-ble-plx';
 
 const SERVICE_UUID = '0000ffe0-0000-1000-8000-00805f9b34fb';
 const CHARACTERISTIC_UUID = '0000ffe1-0000-1000-8000-00805f9b34fb';
+const LETTER_SEND_DELAY_MS = 1500;
 
 let bleManager: BleManager | null = null;
 try {
@@ -142,6 +143,44 @@ export function useBLE() {
     }
   };
 
+  const waitBetweenLetters = () =>
+    new Promise((resolve) => setTimeout(resolve, LETTER_SEND_DELAY_MS));
+
+  const writeLetterToGlove = async (char: string) => {
+    if (!device) return false;
+
+    const base64Data = base64.encode(char);
+
+    try {
+      // Use writeWithoutResponse because HM-10's FFE1 characteristic does not
+      // support write-with-response, even though data is delivered successfully.
+      await device.writeCharacteristicWithoutResponseForService(
+        SERVICE_UUID,
+        CHARACTERISTIC_UUID,
+        base64Data
+      );
+      return true;
+    } catch (err) {
+      console.log('Write error:', err);
+
+      // Check if the device is still reachable before giving up
+      try {
+        const stillConnected = await device.isConnected();
+        if (!stillConnected) {
+          console.log('Device is no longer connected, stopping send.');
+          return false;
+        }
+        // Device is still connected, likely a transient error, continue
+        console.log('Device still connected, continuing to next character.');
+        return true;
+      } catch {
+        // isConnected() itself failed, device is gone
+        console.log('Cannot reach device, stopping send.');
+        return false;
+      }
+    }
+  };
+
   const _sendToGlove = async (text: string) => {
     if (!device) return;
 
@@ -152,40 +191,14 @@ export function useBLE() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     for (let i = 0; i < textToVibrate.length; i++) {
-      const char = textToVibrate[i];
-      const base64Data = base64.encode(char);
-
-      try {
-        // Use writeWithoutResponse — HM-10's FFE1 characteristic does not
-        // support write-with-response, and attempting it causes a BleError
-        // even though the data is delivered successfully.
-        await device.writeCharacteristicWithoutResponseForService(
-          SERVICE_UUID,
-          CHARACTERISTIC_UUID,
-          base64Data
-        );
-      } catch (err) {
-        console.log('Write error:', err);
-
-        // Check if the device is still reachable before giving up
-        try {
-          const stillConnected = await device.isConnected();
-          if (!stillConnected) {
-            console.log('Device is no longer connected, stopping send.');
-            break;
-          }
-          // Device is still connected — likely a transient error, continue
-          console.log('Device still connected, continuing to next character.');
-        } catch {
-          // isConnected() itself failed — device is gone
-          console.log('Cannot reach device, stopping send.');
-          break;
-        }
+      const didWrite = await writeLetterToGlove(textToVibrate[i]);
+      if (!didWrite) {
+        break;
       }
 
       // Wait between characters so the Arduino has time to process each letter
       if (i < textToVibrate.length - 1) {
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        await waitBetweenLetters();
       }
     }
 
