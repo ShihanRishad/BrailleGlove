@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, GestureResponderEvent, PanResponder, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
@@ -16,6 +16,7 @@ interface CommunicationPanelProps {
 }
 
 type Mode = 'text' | 'grid';
+type TrailPoint = { x: number; y: number };
 
 const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const gridColumns = 4;
@@ -29,6 +30,8 @@ const alphabetRows = [
   ['', 'Y', 'Z', ''],
 ];
 const maxGridLetters = 20;
+const maxTrailPoints = 10;
+const minTrailPointDistance = 8;
 
 export default function CommunicationPanel({
   inputText,
@@ -41,6 +44,8 @@ export default function CommunicationPanel({
 }: CommunicationPanelProps) {
   const [mode, setMode] = useState<Mode>('text');
   const [gridLayout, setGridLayout] = useState({ width: 0, height: 0 });
+  const [trailPoints, setTrailPoints] = useState<TrailPoint[]>([]);
+  const [selectedLetters, setSelectedLetters] = useState<string[]>([]);
   const lastSwipedLetter = useRef<string | null>(null);
   const swipedLetters = useRef<string[]>([]);
   const isSwipeTooLong = useRef(false);
@@ -50,12 +55,38 @@ export default function CommunicationPanel({
     isSendingRef.current = isSending;
   }, [isSending]);
 
+  useEffect(() => {
+    if (mode !== 'grid') {
+      resetGridSwipe();
+      setSelectedLetters([]);
+    }
+  }, [mode]);
+
+  const selectedLetterSet = useMemo(() => new Set(selectedLetters), [selectedLetters]);
+
+  const addTrailPoint = (point: TrailPoint) => {
+    setTrailPoints((currentPoints) => {
+      const previousPoint = currentPoints[currentPoints.length - 1];
+
+      if (
+        previousPoint &&
+        Math.hypot(point.x - previousPoint.x, point.y - previousPoint.y) < minTrailPointDistance
+      ) {
+        return currentPoints;
+      }
+
+      return [...currentPoints, point].slice(-maxTrailPoints);
+    });
+  };
+
   const trackLetterFromTouch = (event: GestureResponderEvent) => {
     if (!gridLayout.width || !gridLayout.height) {
       return;
     }
 
     const { locationX, locationY } = event.nativeEvent;
+    addTrailPoint({ x: locationX, y: locationY });
+
     const column = Math.floor(locationX / (gridLayout.width / gridColumns));
     const row = Math.floor(locationY / (gridLayout.height / alphabetRows.length));
     const letter = alphabetRows[row]?.[column];
@@ -72,27 +103,40 @@ export default function CommunicationPanel({
     }
 
     swipedLetters.current.push(letter);
+    setSelectedLetters([...swipedLetters.current]);
   };
 
-  const resetGridSwipe = () => {
+  const resetGridSwipe = (clearSelection = true) => {
     lastSwipedLetter.current = null;
     swipedLetters.current = [];
     isSwipeTooLong.current = false;
+    setTrailPoints([]);
+
+    if (clearSelection) {
+      setSelectedLetters([]);
+    }
   };
 
   const finishGridSwipe = () => {
     const lettersToSend = swipedLetters.current.join('');
+    const lettersToHighlight = [...swipedLetters.current];
     const shouldRejectSwipe = isSwipeTooLong.current;
 
-    resetGridSwipe();
+    resetGridSwipe(false);
 
     if (shouldRejectSwipe) {
+      setSelectedLetters([]);
       Alert.alert('Swipe too long', `Please swipe ${maxGridLetters} letters or fewer.`);
       return;
     }
 
     if (lettersToSend) {
-      sendDirectText(lettersToSend);
+      setSelectedLetters(lettersToHighlight);
+      Promise.resolve(sendDirectText(lettersToSend)).finally(() => {
+        setSelectedLetters([]);
+      });
+    } else {
+      setSelectedLetters([]);
     }
   };
 
@@ -185,16 +229,67 @@ export default function CommunicationPanel({
                   {row.map((letter, columnIndex) => (
                     <View
                       key={`${rowIndex}-${columnIndex}-${letter || 'empty'}`}
-                      style={[styles.gridCell, isDark && darkStyles.gridCell]}
+                      style={[
+                        styles.gridCell,
+                        isDark && darkStyles.gridCell,
+                        letter && selectedLetterSet.has(letter) && styles.gridCellSelected,
+                        letter && selectedLetterSet.has(letter) && isDark && darkStyles.gridCellSelected,
+                      ]}
                       pointerEvents="none"
                     >
                       {letter ? (
-                        <Text style={[styles.gridItemText, isDark && darkStyles.gridItemText]}>{letter}</Text>
+                        <Text
+                          style={[
+                            styles.gridItemText,
+                            isDark && darkStyles.gridItemText,
+                            selectedLetterSet.has(letter) && styles.gridItemTextSelected,
+                          ]}
+                        >
+                          {letter}
+                        </Text>
                       ) : null}
                     </View>
                   ))}
                 </View>
               ))}
+              <View pointerEvents="none" style={styles.gridTrailLayer}>
+                {trailPoints.slice(1).map((point, index) => {
+                  const previousPoint = trailPoints[index];
+                  const segmentLength = Math.hypot(point.x - previousPoint.x, point.y - previousPoint.y);
+                  const segmentAngle = Math.atan2(point.y - previousPoint.y, point.x - previousPoint.x);
+                  const segmentProgress = (index + 1) / Math.max(trailPoints.length - 1, 1);
+                  const segmentThickness = 4 + segmentProgress * 5;
+
+                  return (
+                    <View
+                      key={`${index}-${point.x}-${point.y}`}
+                      style={[
+                        styles.gridTrailSegment,
+                        {
+                          left: (point.x + previousPoint.x - segmentLength) / 2,
+                          top: (point.y + previousPoint.y - segmentThickness) / 2,
+                          width: segmentLength,
+                          height: segmentThickness,
+                          borderRadius: segmentThickness / 2,
+                          opacity: 0.16 + segmentProgress * 0.56,
+                          transform: [{ rotateZ: `${segmentAngle}rad` }],
+                        },
+                      ]}
+                    />
+                  );
+                })}
+                {trailPoints.length ? (
+                  <View
+                    style={[
+                      styles.gridTrailDot,
+                      {
+                        left: trailPoints[trailPoints.length - 1].x - 8,
+                        top: trailPoints[trailPoints.length - 1].y - 8,
+                      },
+                    ]}
+                  />
+                ) : null}
+              </View>
             </View>
             <Text style={[styles.hint, isDark && darkStyles.hint, { marginTop: 14 }]}>
               Tap or swipe across letters to instantly send Braille patterns.

@@ -198,6 +198,7 @@ export const styles = StyleSheet.create({
   gridTable: {
     alignSelf: 'center',
     width: '88%',
+    overflow: 'hidden',
     borderTopWidth: 1,
     borderLeftWidth: 1,
     borderColor: '#E9ECEF',
@@ -215,6 +216,9 @@ export const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: '#E9ECEF',
   },
+  gridCellSelected: {
+    backgroundColor: '#E8F5E9',
+  },
   gridItemText: {
     minWidth: 22,
     textAlign: 'center',
@@ -222,6 +226,33 @@ export const styles = StyleSheet.create({
     lineHeight: 26,
     fontWeight: '700',
     color: '#212529',
+  },
+  gridItemTextSelected: {
+    color: '#1B5E20',
+  },
+  gridTrailLayer: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  gridTrailSegment: {
+    position: 'absolute',
+    backgroundColor: '#39D353',
+    shadowColor: '#39D353',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  gridTrailDot: {
+    position: 'absolute',
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#39D353',
+    shadowColor: '#39D353',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 4,
   },
 });
 
@@ -288,6 +319,9 @@ export const darkStyles = StyleSheet.create({
   gridCell: {
     backgroundColor: '#2C2C2E',
     borderColor: '#3A3A3C',
+  },
+  gridCellSelected: {
+    backgroundColor: '#17381F',
   },
   gridItemText: {
     color: '#FFFFFF',
