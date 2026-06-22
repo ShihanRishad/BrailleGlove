@@ -254,6 +254,63 @@ export const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
+  lookoutSearchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 18,
+  },
+  lookoutInput: {
+    flex: 1,
+    height: 56,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 16,
+    paddingHorizontal: 18,
+    fontSize: 16,
+    color: '#212529',
+    borderWidth: 1,
+    borderColor: '#F1F3F5',
+  },
+  lookoutIconButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: '#F8F9FA',
+    borderWidth: 1,
+    borderColor: '#F1F3F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  lookoutMicButtonActive: {
+    backgroundColor: '#E53935',
+    borderColor: '#E53935',
+  },
+  lookoutSearchButton: {
+    backgroundColor: '#111827',
+    borderColor: '#111827',
+  },
+  lookoutSearchButtonDisabled: {
+    opacity: 0.45,
+  },
+  lookoutAnswerPanel: {
+    flex: 1,
+    minHeight: 170,
+    borderRadius: 20,
+    backgroundColor: '#F8F9FA',
+    borderWidth: 1,
+    borderColor: '#F1F3F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 18,
+    paddingVertical: 20,
+  },
+  lookoutAnswerText: {
+    color: '#111827',
+    fontSize: 44,
+    lineHeight: 52,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
 });
 
 export const darkStyles = StyleSheet.create({
@@ -324,6 +381,17 @@ export const darkStyles = StyleSheet.create({
     backgroundColor: '#17381F',
   },
   gridItemText: {
+    color: '#FFFFFF',
+  },
+  lookoutIconButton: {
+    backgroundColor: '#2C2C2E',
+    borderColor: '#3A3A3C',
+  },
+  lookoutAnswerPanel: {
+    backgroundColor: '#2C2C2E',
+    borderColor: '#3A3A3C',
+  },
+  lookoutAnswerText: {
     color: '#FFFFFF',
   },
 });

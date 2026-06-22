@@ -46,6 +46,13 @@
           "bluetoothAlwaysPermission": "Allow BrailleGlove to connect to your glove."
         }
       ],
+      [
+        "@react-native-voice/voice",
+        {
+          "microphonePermission": "Allow BrailleGlove to listen for Lookout voice searches.",
+          "speechRecognitionPermission": "Allow BrailleGlove to convert speech into Lookout search text."
+        }
+      ],
       "expo-dev-client"
     ],
     "experiments": {
