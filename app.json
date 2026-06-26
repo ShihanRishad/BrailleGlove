@@ -46,6 +46,7 @@
           "bluetoothAlwaysPermission": "Allow BrailleGlove to connect to your glove."
         }
       ],
+      "./plugins/withExcludeAndroidSupport",
       "expo-dev-client"
     ],
     "experiments": {

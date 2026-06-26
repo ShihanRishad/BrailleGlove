@@ -7,8 +7,7 @@ SoftwareSerial BLE(2, 3);
 // (Added the [6] to define the array size)
 int motorPins[6] = {4, 5, 6, 7, 8, 9};
 
-// Braille dictionary for a-z. 
-// (Added the [26][6] to define the 2D array size)
+// Braille dictionary for a-z.
 // 1 means Vibrate (HIGH), 0 means Off (LOW)
 const byte brailleMap[26][6] = {
   {1,0,0,0,0,0}, // a
@@ -39,11 +38,43 @@ const byte brailleMap[26][6] = {
   {1,0,1,0,1,1}  // z
 };
 
+// Braille number prefix (#): dots 3, 4, 5, 6.
+const byte numberPrefix[6] = {0,0,1,1,1,1};
+
+// Common punctuation and special-character Braille patterns.
+struct BrailleSymbol {
+  char character;
+  byte dots[6];
+};
+
+const BrailleSymbol symbolMap[] = {
+  {' ', {0,0,0,0,0,0}}, // space / pause
+  {'.', {0,1,0,0,1,1}},
+  {',', {0,1,0,0,0,0}},
+  {'?', {0,1,1,0,0,1}},
+  {'!', {0,1,1,0,1,0}},
+  {';', {0,1,1,0,0,0}},
+  {':', {0,1,0,0,1,0}},
+  {'-', {0,0,1,0,0,1}},
+  {'\'', {0,0,1,0,0,0}},
+  {'"', {0,1,1,0,0,1}},
+  {'/', {0,0,1,1,0,0}},
+  {'@', {0,0,0,1,0,0}},
+  {'#', {0,0,1,1,1,1}},
+  {'+', {0,1,1,0,1,0}},
+  {'=', {0,1,1,0,1,1}},
+  {'*', {0,0,1,0,1,0}},
+  {'(', {0,1,1,0,1,1}},
+  {')', {0,1,1,0,1,1}}
+};
+
+const int symbolCount = sizeof(symbolMap) / sizeof(symbolMap[0]);
+
 void setup() {
   Serial.begin(9600);
   BLE.begin(9600); // Default HM-10 baud rate
   
-  // Added[i] to properly target each pin in the loop
+  // Prepare to properly target each pin in the loop
   for(int i = 0; i < 6; i++){
     pinMode(motorPins[i], OUTPUT);
     digitalWrite(motorPins[i], LOW);
@@ -51,37 +82,83 @@ void setup() {
   Serial.println("Glove is ready. Waiting for Bluetooth...");
 }
 
+void turnAllMotorsOff() {
+  for (int i = 0; i < 6; i++) {
+    digitalWrite(motorPins[i], LOW);
+  }
+}
+
+void vibratePattern(const byte pattern[6], int pulses = 3) {
+  bool hasDots = false;
+  for (int i = 0; i < 6; i++) {
+    if (pattern[i] == 1) {
+      hasDots = true;
+      break;
+    }
+  }
+
+  // Treat a blank pattern as a readable pause for spaces.
+  if (!hasDots) {
+    turnAllMotorsOff();
+    delay(350);
+    return;
+  }
+
+  for (int pulse = 0; pulse < pulses; pulse++) {
+    for (int i = 0; i < 6; i++) {
+      if (pattern[i] == 1) {
+        digitalWrite(motorPins[i], HIGH);
+      }
+    }
+
+    delay(150); // Pulse duration (on)
+    turnAllMotorsOff();
+    delay(100); // Gap between pulses (off)
+  }
+}
+
+bool findSymbolPattern(char character, byte pattern[6]) {
+  for (int i = 0; i < symbolCount; i++) {
+    if (symbolMap[i].character == character) {
+      for (int dot = 0; dot < 6; dot++) {
+        pattern[dot] = symbolMap[i].dots[dot];
+      }
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void loop() {
   if (BLE.available()) {
     char receivedChar = BLE.read();
-    receivedChar = tolower(receivedChar); // Convert to lowercase
+    char normalizedChar = tolower(receivedChar); // Convert to lowercase
     
-    // Check if it's a letter between a and z
-    if (receivedChar >= 'a' && receivedChar <= 'z') {
-      int letterIndex = receivedChar - 'a'; // Find index (0 for 'a', 25 for 'z')
-      
+    if (normalizedChar >= 'a' && normalizedChar <= 'z') {
+      int letterIndex = normalizedChar - 'a'; // Find index (0 for 'a', 25 for 'z')
+
       Serial.print("Vibrating for: ");
       Serial.println(receivedChar);
+      vibratePattern(brailleMap[letterIndex]);
+    } else if (receivedChar >= '0' && receivedChar <= '9') {
+      int digitIndex = (receivedChar == '0') ? 9 : receivedChar - '1';
 
-      // --- NEW PULSE LOGIC ---
-      // Instead of one long blast, we vibrate 3 times quickly
-      for (int pulse = 0; pulse < 3; pulse++) {
-        
-        // Step A: Turn on the motors for this letter
-        for (int i = 0; i < 6; i++) {
-          if (brailleMap[letterIndex][i] == 1) {
-            digitalWrite(motorPins[i], HIGH);
-          }
-        }
-        
-        delay(150); // Pulse duration (on)
+      Serial.print("Vibrating for number: ");
+      Serial.println(receivedChar);
 
-        // Step B: Turn all motors off for a brief rest
-        for (int i = 0; i < 6; i++) {
-          digitalWrite(motorPins[i], LOW);
-        }
-        
-        delay(100); // Gap between pulses (off)
+      vibratePattern(numberPrefix, 2);
+      delay(250);
+      vibratePattern(brailleMap[digitIndex]);
+    } else {
+      byte symbolPattern[6];
+      if (findSymbolPattern(receivedChar, symbolPattern)) {
+        Serial.print("Vibrating for symbol: ");
+        Serial.println(receivedChar);
+        vibratePattern(symbolPattern);
+      } else {
+        Serial.print("Unsupported character: ");
+        Serial.println(receivedChar);
       }
     }
   }

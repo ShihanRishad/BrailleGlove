@@ -2,6 +2,7 @@
 
 # dependencies
 node_modules/
+.npm-cache/
 
 # Expo
 .expo/
@@ -43,3 +44,4 @@ app-example
 /android
 
 .codex-remote-attachments
+.env

@@ -15,8 +15,10 @@ interface CommunicationPanelProps {
   sendDirectText: (text: string) => void | Promise<void>;
 }
 
-type Mode = 'text' | 'grid';
+type Mode = 'text' | 'grid' | 'lookout';
 type TrailPoint = { x: number; y: number };
+
+const geminiApiKey = process.env.EXPO_PUBLIC_GEMINI_API || process.env.GEMINI_API;
 
 const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const gridColumns = 4;
@@ -46,6 +48,9 @@ export default function CommunicationPanel({
   const [gridLayout, setGridLayout] = useState({ width: 0, height: 0 });
   const [trailPoints, setTrailPoints] = useState<TrailPoint[]>([]);
   const [selectedLetters, setSelectedLetters] = useState<string[]>([]);
+  const [lookoutQuery, setLookoutQuery] = useState('');
+  const [lookoutAnswer, setLookoutAnswer] = useState('');
+  const [isSearchingLookout, setIsSearchingLookout] = useState(false);
   const lastSwipedLetter = useRef<string | null>(null);
   const swipedLetters = useRef<string[]>([]);
   const isSwipeTooLong = useRef(false);
@@ -140,6 +145,78 @@ export default function CommunicationPanel({
     }
   };
 
+  const searchLookout = async () => {
+    const query = lookoutQuery.trim();
+
+    if (!query || isSearchingLookout) {
+      return;
+    }
+
+    if (!geminiApiKey) {
+      Alert.alert('Gemini key missing', 'Add EXPO_PUBLIC_GEMINI_API to your .env file.');
+      return;
+    }
+
+    setIsSearchingLookout(true);
+    setLookoutAnswer('');
+
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${geminiApiKey}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                role: 'user',
+                parts: [
+                  {
+                    text: `Answer the question as short as possible. Use plain letters, numbers, and spaces. Avoid special characters such as colon, comma, period, dash, caret, brackets, quotes, and symbols unless absolutely necessary. If it asks for a number, return only the number and unit if needed. If it asks for a name, return only the name. No sentence, no explanation.\n\nQuestion: ${query}`,
+                  },
+                ],
+              },
+            ],
+            generationConfig: {
+              temperature: 0,
+              maxOutputTokens: 24,
+            },
+          }),
+        }
+      );
+
+      const data = await response.json();
+      const answer = data?.candidates?.[0]?.content?.parts
+        ?.map((part: { text?: string }) => part.text)
+        .filter(Boolean)
+        .join('')
+        .trim();
+
+      if (!response.ok) {
+        throw new Error(data?.error?.message || 'Gemini request failed.');
+      }
+
+      setLookoutAnswer(answer || 'No answer');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Could not search right now.';
+      Alert.alert('Lookout failed', message);
+    } finally {
+      setIsSearchingLookout(false);
+    }
+  };
+
+  const sendLookoutAnswerToGlove = () => {
+    const answer = lookoutAnswer.trim();
+
+    if (!answer || isSending) {
+      return;
+    }
+
+    sendDirectText(answer);
+  };
+
   const gridPanResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => mode === 'grid' && !isSendingRef.current,
     onMoveShouldSetPanResponder: () => mode === 'grid' && !isSendingRef.current,
@@ -176,6 +253,12 @@ export default function CommunicationPanel({
             onPress={() => setMode('grid')}
           >
             <Text style={[styles.modeToggleText, isDark && darkStyles.modeToggleText, mode === 'grid' && styles.modeToggleTextActive, isDark && mode === 'grid' && darkStyles.modeToggleTextActive]}>Grid</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.modeToggleButton, mode === 'lookout' && styles.modeToggleButtonActive, isDark && mode === 'lookout' && darkStyles.modeToggleButtonActive]}
+            onPress={() => setMode('lookout')}
+          >
+            <Text style={[styles.modeToggleText, isDark && darkStyles.modeToggleText, mode === 'lookout' && styles.modeToggleTextActive, isDark && mode === 'lookout' && darkStyles.modeToggleTextActive]}>Lookout</Text>
           </TouchableOpacity>
         </View>
 
@@ -217,7 +300,7 @@ export default function CommunicationPanel({
               The glove will vibrate each letter in Braille pattern.
             </Text>
           </View>
-        ) : (
+        ) : mode === 'grid' ? (
           <View style={{ flex: 1, paddingTop: 8 }}>
             <View
               style={[styles.gridTable, isDark && darkStyles.gridTable, isSending && { opacity: 0.5 }]}
@@ -293,6 +376,74 @@ export default function CommunicationPanel({
             </View>
             <Text style={[styles.hint, isDark && darkStyles.hint, { marginTop: 14 }]}>
               Tap or swipe across letters to instantly send Braille patterns.
+            </Text>
+          </View>
+        ) : (
+          <View style={{ flex: 1, paddingTop: 8 }}>
+            <View style={styles.lookoutSearchRow}>
+              <TextInput
+                style={[styles.lookoutInput, isDark && darkStyles.input]}
+                placeholder="Ask anything..."
+                value={lookoutQuery}
+                onChangeText={setLookoutQuery}
+                placeholderTextColor={isDark ? '#888888' : '#BDBDBD'}
+                editable={!isSearchingLookout}
+                returnKeyType="search"
+                onSubmitEditing={searchLookout}
+              />
+              <TouchableOpacity
+                style={[
+                  styles.lookoutIconButton,
+                  styles.lookoutSearchButton,
+                  (!lookoutQuery.trim() || isSearchingLookout) && styles.lookoutSearchButtonDisabled,
+                ]}
+                onPress={searchLookout}
+                disabled={!lookoutQuery.trim() || isSearchingLookout}
+              >
+                {isSearchingLookout ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Ionicons name="search" size={22} color="white" />
+                )}
+              </TouchableOpacity>
+            </View>
+
+            <View style={[styles.lookoutAnswerPanel, isDark && darkStyles.lookoutAnswerPanel]}>
+              <Text
+                adjustsFontSizeToFit
+                numberOfLines={3}
+                minimumFontScale={0.55}
+                style={[styles.lookoutAnswerText, isDark && darkStyles.lookoutAnswerText]}
+              >
+                {lookoutAnswer || 'Answer'}
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.sendButton,
+                (!lookoutAnswer.trim() || isSending || isSearchingLookout)
+                  ? isDark
+                    ? darkStyles.disabledButton
+                    : styles.disabledButton
+                  : null,
+                { marginTop: 16 },
+              ]}
+              onPress={sendLookoutAnswerToGlove}
+              disabled={!lookoutAnswer.trim() || isSending || isSearchingLookout}
+            >
+              {isSending ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <>
+                  <Ionicons name="send" size={18} color="white" style={{ marginRight: 8 }} />
+                  <Text style={styles.buttonText}>Send to Glove</Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            <Text style={[styles.hint, isDark && darkStyles.hint, { marginTop: 14 }]}>
+              Type a short question and send the answer to the glove.
             </Text>
           </View>
         )}
