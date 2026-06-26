@@ -53,6 +53,7 @@
           "speechRecognitionPermission": "Allow BrailleGlove to convert speech into Lookout search text."
         }
       ],
+      "./plugins/withExcludeAndroidSupport",
       "expo-dev-client"
     ],
     "experiments": {

@@ -35,6 +35,20 @@ const alphabetRows = [
 const maxGridLetters = 20;
 const maxTrailPoints = 10;
 const minTrailPointDistance = 8;
+const speechUnavailableMessage = 'Speech recognition is not available in this app build or on this device.';
+
+const getVoiceModule = () => {
+  if (
+    Voice &&
+    typeof Voice.isAvailable === 'function' &&
+    typeof Voice.start === 'function' &&
+    typeof Voice.stop === 'function'
+  ) {
+    return Voice;
+  }
+
+  return null;
+};
 
 export default function CommunicationPanel({
   inputText,
@@ -70,7 +84,13 @@ export default function CommunicationPanel({
   }, [mode]);
 
   useEffect(() => {
-    Voice.onSpeechResults = (event: SpeechResultsEvent) => {
+    const voiceModule = getVoiceModule();
+
+    if (!voiceModule) {
+      return;
+    }
+
+    voiceModule.onSpeechResults = (event: SpeechResultsEvent) => {
       const spokenText = event.value?.[0]?.trim();
 
       if (spokenText) {
@@ -78,17 +98,17 @@ export default function CommunicationPanel({
       }
     };
 
-    Voice.onSpeechError = (event: SpeechErrorEvent) => {
+    voiceModule.onSpeechError = (event: SpeechErrorEvent) => {
       setIsListeningLookout(false);
       Alert.alert('Voice typing failed', event.error?.message || 'Could not recognize speech.');
     };
 
-    Voice.onSpeechEnd = () => {
+    voiceModule.onSpeechEnd = () => {
       setIsListeningLookout(false);
     };
 
     return () => {
-      Voice.destroy().then(Voice.removeAllListeners);
+      Promise.resolve(voiceModule.destroy?.()).finally(() => voiceModule.removeAllListeners?.());
     };
   }, []);
 
@@ -238,13 +258,20 @@ export default function CommunicationPanel({
     }
 
     try {
+      const voiceModule = getVoiceModule();
+
+      if (!voiceModule) {
+        Alert.alert('Voice typing unavailable', speechUnavailableMessage);
+        return;
+      }
+
       if (isListeningLookout) {
-        await Voice.stop();
+        await voiceModule.stop();
         setIsListeningLookout(false);
         return;
       }
 
-      const isVoiceAvailable = await Voice.isAvailable();
+      const isVoiceAvailable = await voiceModule.isAvailable();
 
       if (!isVoiceAvailable) {
         Alert.alert('Voice typing unavailable', 'No speech recognition service is available on this device.');
@@ -253,7 +280,7 @@ export default function CommunicationPanel({
 
       setLookoutAnswer('');
       setIsListeningLookout(true);
-      await Voice.start('en-US');
+      await voiceModule.start('en-US');
     } catch (error) {
       setIsListeningLookout(false);
       const message = error instanceof Error ? error.message : 'Could not start voice typing.';
