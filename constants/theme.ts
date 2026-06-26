@@ -281,10 +281,6 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  lookoutMicButtonActive: {
-    backgroundColor: '#E53935',
-    borderColor: '#E53935',
-  },
   lookoutSearchButton: {
     backgroundColor: '#111827',
     borderColor: '#111827',

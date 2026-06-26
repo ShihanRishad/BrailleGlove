@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import Voice, { SpeechErrorEvent, SpeechResultsEvent } from '@react-native-voice/voice';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, GestureResponderEvent, PanResponder, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -35,20 +34,6 @@ const alphabetRows = [
 const maxGridLetters = 20;
 const maxTrailPoints = 10;
 const minTrailPointDistance = 8;
-const speechUnavailableMessage = 'Speech recognition is not available in this app build or on this device.';
-
-const getVoiceModule = () => {
-  if (
-    Voice &&
-    typeof Voice.isAvailable === 'function' &&
-    typeof Voice.start === 'function' &&
-    typeof Voice.stop === 'function'
-  ) {
-    return Voice;
-  }
-
-  return null;
-};
 
 export default function CommunicationPanel({
   inputText,
@@ -66,7 +51,6 @@ export default function CommunicationPanel({
   const [lookoutQuery, setLookoutQuery] = useState('');
   const [lookoutAnswer, setLookoutAnswer] = useState('');
   const [isSearchingLookout, setIsSearchingLookout] = useState(false);
-  const [isListeningLookout, setIsListeningLookout] = useState(false);
   const lastSwipedLetter = useRef<string | null>(null);
   const swipedLetters = useRef<string[]>([]);
   const isSwipeTooLong = useRef(false);
@@ -82,35 +66,6 @@ export default function CommunicationPanel({
       setSelectedLetters([]);
     }
   }, [mode]);
-
-  useEffect(() => {
-    const voiceModule = getVoiceModule();
-
-    if (!voiceModule) {
-      return;
-    }
-
-    voiceModule.onSpeechResults = (event: SpeechResultsEvent) => {
-      const spokenText = event.value?.[0]?.trim();
-
-      if (spokenText) {
-        setLookoutQuery(spokenText);
-      }
-    };
-
-    voiceModule.onSpeechError = (event: SpeechErrorEvent) => {
-      setIsListeningLookout(false);
-      Alert.alert('Voice typing failed', event.error?.message || 'Could not recognize speech.');
-    };
-
-    voiceModule.onSpeechEnd = () => {
-      setIsListeningLookout(false);
-    };
-
-    return () => {
-      Promise.resolve(voiceModule.destroy?.()).finally(() => voiceModule.removeAllListeners?.());
-    };
-  }, []);
 
   const selectedLetterSet = useMemo(() => new Set(selectedLetters), [selectedLetters]);
 
@@ -249,42 +204,6 @@ export default function CommunicationPanel({
       Alert.alert('Lookout failed', message);
     } finally {
       setIsSearchingLookout(false);
-    }
-  };
-
-  const toggleLookoutVoiceTyping = async () => {
-    if (isSearchingLookout) {
-      return;
-    }
-
-    try {
-      const voiceModule = getVoiceModule();
-
-      if (!voiceModule) {
-        Alert.alert('Voice typing unavailable', speechUnavailableMessage);
-        return;
-      }
-
-      if (isListeningLookout) {
-        await voiceModule.stop();
-        setIsListeningLookout(false);
-        return;
-      }
-
-      const isVoiceAvailable = await voiceModule.isAvailable();
-
-      if (!isVoiceAvailable) {
-        Alert.alert('Voice typing unavailable', 'No speech recognition service is available on this device.');
-        return;
-      }
-
-      setLookoutAnswer('');
-      setIsListeningLookout(true);
-      await voiceModule.start('en-US');
-    } catch (error) {
-      setIsListeningLookout(false);
-      const message = error instanceof Error ? error.message : 'Could not start voice typing.';
-      Alert.alert('Voice typing failed', message);
     }
   };
 
@@ -465,21 +384,6 @@ export default function CommunicationPanel({
               <TouchableOpacity
                 style={[
                   styles.lookoutIconButton,
-                  isDark && darkStyles.lookoutIconButton,
-                  isListeningLookout && styles.lookoutMicButtonActive,
-                ]}
-                onPress={toggleLookoutVoiceTyping}
-                disabled={isSearchingLookout}
-              >
-                <Ionicons
-                  name={isListeningLookout ? 'mic-circle' : 'mic'}
-                  size={isListeningLookout ? 26 : 22}
-                  color={isListeningLookout ? '#FFFFFF' : isDark ? '#FFFFFF' : '#212529'}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.lookoutIconButton,
                   styles.lookoutSearchButton,
                   (!lookoutQuery.trim() || isSearchingLookout) && styles.lookoutSearchButtonDisabled,
                 ]}
@@ -506,7 +410,7 @@ export default function CommunicationPanel({
             </View>
 
             <Text style={[styles.hint, isDark && darkStyles.hint, { marginTop: 14 }]}>
-              {isListeningLookout ? 'Listening...' : 'Tap the mic and speak your search.'}
+              Type a short question and send the answer to the glove.
             </Text>
           </View>
         )}
