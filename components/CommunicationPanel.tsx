@@ -174,7 +174,7 @@ export default function CommunicationPanel({
                 role: 'user',
                 parts: [
                   {
-                    text: `Answer the question as short as possible. If it asks for a number, return only the number and unit if needed. If it asks for a name, return only the name. No sentence, no explanation.\n\nQuestion: ${query}`,
+                    text: `Answer the question as short as possible. Use plain letters, numbers, and spaces. Avoid special characters such as colon, comma, period, dash, caret, brackets, quotes, and symbols unless absolutely necessary. If it asks for a number, return only the number and unit if needed. If it asks for a name, return only the name. No sentence, no explanation.\n\nQuestion: ${query}`,
                   },
                 ],
               },
@@ -205,6 +205,16 @@ export default function CommunicationPanel({
     } finally {
       setIsSearchingLookout(false);
     }
+  };
+
+  const sendLookoutAnswerToGlove = () => {
+    const answer = lookoutAnswer.trim();
+
+    if (!answer || isSending) {
+      return;
+    }
+
+    sendDirectText(answer);
   };
 
   const gridPanResponder = PanResponder.create({
@@ -408,6 +418,29 @@ export default function CommunicationPanel({
                 {lookoutAnswer || 'Answer'}
               </Text>
             </View>
+
+            <TouchableOpacity
+              style={[
+                styles.sendButton,
+                (!lookoutAnswer.trim() || isSending || isSearchingLookout)
+                  ? isDark
+                    ? darkStyles.disabledButton
+                    : styles.disabledButton
+                  : null,
+                { marginTop: 16 },
+              ]}
+              onPress={sendLookoutAnswerToGlove}
+              disabled={!lookoutAnswer.trim() || isSending || isSearchingLookout}
+            >
+              {isSending ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <>
+                  <Ionicons name="send" size={18} color="white" style={{ marginRight: 8 }} />
+                  <Text style={styles.buttonText}>Send to Glove</Text>
+                </>
+              )}
+            </TouchableOpacity>
 
             <Text style={[styles.hint, isDark && darkStyles.hint, { marginTop: 14 }]}>
               Type a short question and send the answer to the glove.
